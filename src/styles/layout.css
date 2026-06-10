@@ -101,6 +101,27 @@ img {
   min-width: 0;
 }
 
+.header-auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #cfe0dd;
+  border-radius: 999px;
+  background: #edf5f4;
+  color: #1d6d61;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .home-button {
   width: 42px;
   height: 42px;
@@ -942,6 +963,68 @@ img {
   margin: 0 auto;
 }
 
+.auth-card {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.auth-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.auth-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #2f7f6f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.form-helper,
+.form-error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-helper {
+  color: #52667a;
+}
+
+.form-error {
+  padding: 12px 14px;
+  border: 1px solid #e8b9ae;
+  border-radius: 9px;
+  background: #fff8f5;
+  color: #a33d2d;
+  font-weight: 800;
+}
+
+.inline-api-key-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.inline-api-key-row input {
+  flex: 1;
+}
+
+.tag-extract-button {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 9px 13px;
+  border: 1px solid #2f7f6f;
+  border-radius: 8px;
+  background: #2f7f6f;
+  color: #ffffff;
+  font-weight: 800;
+}
+
 .book-form,
 .cover-form-area {
   display: flex;
@@ -1213,6 +1296,12 @@ img {
     align-self: flex-start;
   }
 
+  .header-auth {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
   .list-actions {
     width: 100%;
   }
@@ -1279,7 +1368,8 @@ img {
   .detail-buttons,
   .cover-buttons,
   .form-buttons,
-  .list-actions {
+  .list-actions,
+  .inline-api-key-row {
     flex-direction: column;
   }
 
@@ -1288,7 +1378,8 @@ img {
   .create-button,
   .detail-buttons button,
   .cover-buttons button,
-  .form-buttons button {
+  .form-buttons button,
+  .inline-api-key-row button {
     width: 100%;
   }
 }

@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-function Header({ onMoveToStart, aiRecommendation, page }) {
+function Header({
+  onMoveToStart,
+  aiRecommendation,
+  page,
+  currentUser,
+  onMoveToLogin,
+  onMoveToSignup,
+  onLogout,
+}) {
   const [currentBanner, setCurrentBanner] = useState(0);
   const currentMonth = new Date().getMonth() + 1;
 
@@ -29,6 +37,33 @@ function Header({ onMoveToStart, aiRecommendation, page }) {
           <button type="button" className="brand-title" onClick={onMoveToStart}>
             AivleBooks
           </button>
+        </div>
+        <div className="header-auth">
+          {currentUser ? (
+            <>
+              <span className="user-chip">{currentUser.nickname}</span>
+              <button type="button" className="secondary-btn" onClick={onLogout}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={onMoveToLogin}
+              >
+                로그인
+              </button>
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={onMoveToSignup}
+              >
+                회원가입
+              </button>
+            </>
+          )}
         </div>
       </header>
       {(page === "start" || page === "list") && (

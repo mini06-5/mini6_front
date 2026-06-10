@@ -9,10 +9,16 @@ function BookDetail({
   onMoveToCoverUpdate,
   onDelete,
   onLikeBook,
+  currentUser,
 }) {
   const [isCoverOpen, setIsCoverOpen] = useState(false);
   const hasCoverImage = Boolean(book?.coverImageUrl);
   const tagList = book.tags ? book.tags.split(" ") : [];
+  const isLoggedIn = Boolean(currentUser);
+  const isOwner =
+    isLoggedIn &&
+    book?.authorUserId != null &&
+    String(book.authorUserId) === String(currentUser?.id);
 
   if (!book) {
     return (
@@ -139,26 +145,28 @@ function BookDetail({
                 <span>추천수</span>
                 <strong>{book.likeCount}</strong>
               </p>
-              <button
-                type="button"
-                className="like-button"
-                onClick={() => onLikeBook(book)}
-                aria-label={`${book.title} 도서 추천하기`}
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
+              {isLoggedIn && (
+                <button
+                  type="button"
+                  className="like-button"
+                  onClick={() => onLikeBook(book)}
+                  aria-label={`${book.title} 도서 추천하기`}
                 >
-                  <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                  <path d="M7 11 11 2a3 3 0 0 1 3 3v4h4.4a2.6 2.6 0 0 1 2.5 3.2l-1.7 6.8A4 4 0 0 1 15.3 22H7V11Z" />
-                </svg>
-                <span>추천하기</span>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                  >
+                    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                    <path d="M7 11 11 2a3 3 0 0 1 3 3v4h4.4a2.6 2.6 0 0 1 2.5 3.2l-1.7 6.8A4 4 0 0 1 15.3 22H7V11Z" />
+                  </svg>
+                  <span>추천하기</span>
+                </button>
+              )}
             </div>
 
-            <div className="detail-buttons">
+            {isOwner && <div className="detail-buttons">
               <button type="button" onClick={() => onMoveToCoverUpdate(book)}>
                 <svg
                   aria-hidden="true"
@@ -181,7 +189,7 @@ function BookDetail({
               >
                 삭제
               </button>
-            </div>
+            </div>}
           </div>
         </section>
 

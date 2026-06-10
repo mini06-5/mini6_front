@@ -5,12 +5,22 @@ import BookCreate from "./pages/BookCreate";
 import BookUpdate from "./pages/BookUpdate";
 import CoverUpdate from "./pages/CoverUpdate";
 import StartPage from "./pages/StartPage";
+import AuthPage from "./pages/AuthPage";
 import Header from "./components/Header";
+import {
+  clearAuth,
+  getStoredAuth,
+  login as loginUser,
+  saveAuth,
+  signup as signupUser,
+} from "./api/authApi";
 const API_URL = import.meta.env.VITE_BOOK_API_URL || "http://localhost:8080/books";
 
 const normalizeBooks = (data) => {
   if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
   if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.data?.content)) return data.data.content;
   return [];
 };
 
@@ -23,6 +33,10 @@ function App() {
   const [listPage, setListPage] = useState(1);
   const [message, setMessage] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState(null);
+  const [auth, setAuth] = useState(() => getStoredAuth());
+
+  const currentUser = auth?.user || null;
+  const authToken = auth?.accessToken || "";
 
   const selectedBook = useMemo(
     () => books.find((book) => book.id === selectedId) || null,
@@ -202,6 +216,17 @@ function App() {
     setMessage("");
     setPage("start");
   };
+
+  const moveToLogin = () => {
+    setMessage("");
+    setPage("login");
+  };
+
+  const moveToSignup = () => {
+    setMessage("");
+    setPage("signup");
+  };
+
   const moveToList = () => {
     setListPage(1);
     setMessage("");
@@ -214,8 +239,42 @@ function App() {
   };
 
   const moveToCreate = () => {
+    if (!currentUser) {
+      setMessage("로그인 후 새 도서를 등록할 수 있습니다.");
+      setPage("login");
+      return;
+    }
+
     setMessage("");
     setPage("create");
+  };
+
+  const handleLogin = async (credentials) => {
+    const nextAuth = await loginUser(credentials);
+
+    saveAuth(nextAuth);
+    setAuth(nextAuth);
+    setMessage("로그인되었습니다.");
+    setPage("start");
+  };
+
+  const handleSignup = async (formData) => {
+    const nextAuth = await signupUser(formData);
+
+    saveAuth(nextAuth);
+    setAuth(nextAuth);
+    setMessage("회원가입이 완료되었습니다.");
+    setPage("start");
+  };
+
+  const handleLogout = () => {
+    clearAuth();
+    setAuth(null);
+    setMessage("로그아웃되었습니다.");
+
+    if (["create", "update", "coverUpdate"].includes(page)) {
+      setPage("start");
+    }
   };
 
   const moveToDetail = (book) => {
@@ -238,8 +297,12 @@ function App() {
 
   const handleCreateBook = async (formData) => {
     const now = new Date().toISOString();
+    const authorName =
+      currentUser?.nickname || currentUser?.name || currentUser?.userId || formData.author;
     const newBook = {
       ...formData,
+      author: authorName,
+      userId: currentUser?.userId,
       coverImageUrl: "",
       likeCount: 0,
       createdAt: now,
@@ -251,6 +314,7 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify(newBook),
       });
@@ -282,6 +346,7 @@ function App() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify(updatedBook),
       });
@@ -305,18 +370,24 @@ function App() {
   };
 
   const handleLikeBook = async (book) => {
-    const currentLikes = book.likeCount || 0;
+    if (!currentUser) {
+      setMessage("로그인 후 추천할 수 있습니다.");
+      setPage("login");
+      return;
+    }
 
     try {
-      const res = await fetch(`${API_URL}/${book.id}`, {
-        method: "PATCH",
+      const res = await fetch(`${API_URL}/${book.id}/like`, {
+        method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
-        body: JSON.stringify({ likeCount: currentLikes + 1 }),
       });
 
       if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error("이미 추천한 도서입니다.");
+        }
         throw new Error("도서 추천에 실패했습니다.");
       }
 
@@ -331,7 +402,7 @@ function App() {
       setPage("detail");
     } catch (error) {
       console.error(error);
-      setMessage("도서 추천 중 오류가 발생했습니다.");
+      setMessage(error.message || "도서 추천 중 오류가 발생했습니다.");
     }
   };
 
@@ -343,6 +414,9 @@ function App() {
     try {
       const res = await fetch(`${API_URL}/${book.id}`, {
         method: "DELETE",
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
       });
 
       if (!res.ok) {
@@ -427,6 +501,7 @@ function App() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           coverImageUrl: imageSrc,
@@ -491,6 +566,10 @@ function App() {
         onMoveToStart={moveToStart}
         aiRecommendation={aiRecommendation}
         page={page}
+        currentUser={currentUser}
+        onMoveToLogin={moveToLogin}
+        onMoveToSignup={moveToSignup}
+        onLogout={handleLogout}
       />
       {page === "start" && (
         <StartPage
@@ -526,6 +605,7 @@ function App() {
           onMoveToCoverUpdate={moveToCoverUpdate}
           onDelete={handleDeleteBook}
           onLikeBook={handleLikeBook}
+          currentUser={currentUser}
         />
       )}
 
@@ -534,6 +614,29 @@ function App() {
           onMoveToList={moveToList}
           onCreate={handleCreateBook}
           onExtractTags={handleExtractTags}
+          currentUser={currentUser}
+        />
+      )}
+
+      {page === "login" && (
+        <AuthPage
+          mode="login"
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          onMoveToLogin={moveToLogin}
+          onMoveToSignup={moveToSignup}
+          onMoveToStart={moveToStart}
+        />
+      )}
+
+      {page === "signup" && (
+        <AuthPage
+          mode="signup"
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          onMoveToLogin={moveToLogin}
+          onMoveToSignup={moveToSignup}
+          onMoveToStart={moveToStart}
         />
       )}
 

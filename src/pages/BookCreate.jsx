@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BookForm from "../components/BookForm";
 
-function BookCreate({ onMoveToList, onCreate, onExtractTags }) {
+const getAuthorName = (user) => user?.nickname || user?.name || user?.userId || "";
+
+function BookCreate({ onMoveToList, onCreate, onExtractTags, currentUser }) {
   const [formData, setFormData] = useState({
     title: "",
-    author: "",
+    author: getAuthorName(currentUser),
     publisher: "",
     content: "",
     tags: "",
   });
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      author: getAuthorName(currentUser),
+    }));
+  }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,23 +40,23 @@ function BookCreate({ onMoveToList, onCreate, onExtractTags }) {
   };
 
   return (
-    <>
-      <main className="form-page">
-        <section className="section-card form-card">
-          <h2>새 도서 등록</h2>
+    <main className="form-page">
+      <section className="section-card form-card">
+        <h2>새 도서 등록</h2>
 
-          <BookForm
-            formData={formData}
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-            onCancel={onMoveToList}
-            onExtractTags={onExtractTags}
-            submitText="등록하기"
-          />
-        </section>
-      </main>
-    </>
+        <BookForm
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          onCancel={onMoveToList}
+          onExtractTags={onExtractTags}
+          submitText="등록하기"
+          authorReadonly={Boolean(currentUser)}
+        />
+      </section>
+    </main>
   );
 }
 
 export default BookCreate;
+
