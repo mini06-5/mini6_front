@@ -101,7 +101,7 @@ function Header({
               <div>
                 <strong>✨ {currentMonth}월의 AI 추천 도서</strong>
                 <p style={{ marginTop: "8px", fontWeight: "bold" }}>
-                  [{aiRecommendation.title}] - {aiRecommendation.author}
+                  [{aiRecommendation.title}] - {aiRecommendation.author.nickname}
                 </p>
                 <p
                   style={{ marginTop: "4px", fontSize: "0.9rem", opacity: 0.8 }}
