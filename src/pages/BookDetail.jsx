@@ -1,6 +1,6 @@
 import { useState } from "react";
 import CoverImageModal from "../components/CoverImageModal";
-
+ 
 function BookDetail({
   book,
   onMoveToList,
@@ -10,16 +10,15 @@ function BookDetail({
   onDelete,
   onLikeBook,
   currentUser,
+  isLiked = false,
 }) {
   const [isCoverOpen, setIsCoverOpen] = useState(false);
   const hasCoverImage = Boolean(book?.coverImageUrl);
-  const tagList = book.tags ? book.tags.split(" ") : [];
+  const tagList = book?.tags ? book.tags.split(" ") : [];
   const isLoggedIn = Boolean(currentUser);
   const isOwner =
-    isLoggedIn &&
-    book?.author != null &&
-    String(book.author.userId) === String(currentUser?.id);
-
+    isLoggedIn && String(book?.author?.userId) === String(currentUser.userId);
+ 
   if (!book) {
     return (
       <>
@@ -29,7 +28,7 @@ function BookDetail({
       </>
     );
   }
-
+ 
   return (
     <>
       <main className="detail-page">
@@ -51,7 +50,7 @@ function BookDetail({
                 <path d="m12 19-7-7 7-7" />
               </svg>
             </button>
-
+ 
             <button
               type="button"
               className="list-return-button"
@@ -71,7 +70,7 @@ function BookDetail({
               <span>목록으로</span>
             </button>
           </div>
-
+ 
           <div
             className={`detail-cover ${hasCoverImage ? "has-image" : ""}`}
             onClick={() => {
@@ -103,7 +102,7 @@ function BookDetail({
               </>
             )}
           </div>
-
+ 
           <div className="detail-info">
             <span className="tag">상세 조회</span>
             <h2>{book.title}</h2>
@@ -130,12 +129,12 @@ function BookDetail({
             )}
             <p>저자: {book.author.nickname}</p>
             {book.publisher && <p>출판사: {book.publisher}</p>}
-
+ 
             <div className="content-box">
               <strong>도서 소개</strong>
               <p>{book.content}</p>
             </div>
-
+ 
             <p className="date-text">
               등록일: {book.createdAt.slice(0, 10)} / 수정일:{" "}
               {book.updatedAt.slice(0, 10)}
@@ -148,9 +147,10 @@ function BookDetail({
               {isLoggedIn && (
                 <button
                   type="button"
-                  className="like-button"
+                  className={`like-button ${isLiked ? "is-liked" : ""}`}
                   onClick={() => onLikeBook(book)}
-                  aria-label={`${book.title} 도서 추천하기`}
+                  aria-pressed={isLiked}
+                  aria-label={`${book.title} ${isLiked ? "추천 취소" : "추천하기"}`}
                 >
                   <svg
                     aria-hidden="true"
@@ -161,11 +161,10 @@ function BookDetail({
                     <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
                     <path d="M7 11 11 2a3 3 0 0 1 3 3v4h4.4a2.6 2.6 0 0 1 2.5 3.2l-1.7 6.8A4 4 0 0 1 15.3 22H7V11Z" />
                   </svg>
-                  <span>추천하기</span>
                 </button>
               )}
             </div>
-
+ 
             {isOwner && <div className="detail-buttons">
               <button type="button" onClick={() => onMoveToCoverUpdate(book)}>
                 <svg
@@ -192,7 +191,7 @@ function BookDetail({
             </div>}
           </div>
         </section>
-
+ 
         {isCoverOpen && book.coverImageUrl && (
           <CoverImageModal
             imageUrl={book.coverImageUrl}
@@ -204,5 +203,5 @@ function BookDetail({
     </>
   );
 }
-
+ 
 export default BookDetail;

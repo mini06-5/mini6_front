@@ -33,6 +33,27 @@ function AuthPage({
     setIsSubmitting(true);
 
     try {
+      const requiredFields = isLogin
+        ? [
+            ["userId", "아이디"],
+            ["password", "비밀번호"],
+          ]
+        : [
+            ["userId", "아이디"],
+            ["password", "비밀번호"],
+            ["nickname", "닉네임"],
+            ["name", "이름"],
+            ["email", "이메일"],
+          ];
+      const missingFields = requiredFields
+        .filter(([fieldName]) => !formData[fieldName].trim())
+        .map(([, label]) => label);
+
+      if (missingFields.length > 0) {
+        setError(`${missingFields.join(", ")}을(를) 입력해주세요.`);
+        return;
+      }
+
       if (isLogin) {
         await onLogin({
           userId: formData.userId,
@@ -63,7 +84,7 @@ function AuthPage({
 
         <form className="book-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>아이디</label>
+            <label className="required-label">아이디</label>
             <input
               type="text"
               name="userId"
@@ -75,7 +96,7 @@ function AuthPage({
           </div>
 
           <div className="form-group">
-            <label>비밀번호</label>
+            <label className="required-label">비밀번호</label>
             <input
               type="password"
               name="password"
@@ -89,7 +110,7 @@ function AuthPage({
           {!isLogin && (
             <>
               <div className="form-group">
-                <label>닉네임</label>
+                <label className="required-label">닉네임</label>
                 <input
                   type="text"
                   name="nickname"
@@ -100,7 +121,7 @@ function AuthPage({
               </div>
 
               <div className="form-group">
-                <label>이름</label>
+                <label className="required-label">이름</label>
                 <input
                   type="text"
                   name="name"
@@ -112,7 +133,7 @@ function AuthPage({
               </div>
 
               <div className="form-group">
-                <label>이메일</label>
+                <label className="required-label">이메일</label>
                 <input
                   type="email"
                   name="email"

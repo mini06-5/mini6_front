@@ -1,13 +1,13 @@
 import { useState } from "react";
 import BookForm from "../components/BookForm";
 
-function BookUpdate({ book, onMoveToDetail, onUpdate, onExtractTags }) {
+function BookUpdate({ book, onMoveToDetail, onUpdate, onExtractTags, currentUser }) {
   const [formData, setFormData] = useState({
     title: book?.title || "",
     author: book?.author?.nickname || "",
     publisher: book?.publisher || "",
     content: book?.content || "",
-    tags: book.tags || "",
+    tags: book?.tags || "",
   });
 
   if (!book) {
@@ -64,6 +64,7 @@ function BookUpdate({ book, onMoveToDetail, onUpdate, onExtractTags }) {
             submitText="수정하기"
             cancelClassName="danger-button"
             onExtractTags={onExtractTags}
+            authorReadonly={Boolean(currentUser)}
           />
         </section>
       </main>

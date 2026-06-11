@@ -1,23 +1,63 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const BANNER_INTERVAL_MS = 5000;
+
 function Header({
   onMoveToStart,
-  aiRecommendation,
+  aiRecommendations = [],
   page,
   currentUser,
   onMoveToLogin,
   onMoveToSignup,
   onLogout,
+  onMoveToDetail,
 }) {
   const [currentBanner, setCurrentBanner] = useState(0);
   const currentMonth = new Date().getMonth() + 1;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBanner((prev) => (prev === 0 ? 1 : 0));
-    }, 5000);
+  const banners = useMemo(() => {
+    const introBanner = {
+      type: "intro",
+      label: "AivleBooks 소개",
+    };
 
-    return () => clearInterval(timer);
-  }, []);
+    const recommendationBanners = [0, 1].map((index) => ({
+      type: "recommendation",
+      label: `${currentMonth}월의 AI 추천 도서 ${index + 1}`,
+      book: aiRecommendations[index] || null,
+    }));
+
+    return [introBanner, ...recommendationBanners];
+  }, [aiRecommendations, currentMonth]);
+
+  useEffect(() => {
+    if (currentBanner >= banners.length) {
+      setCurrentBanner(0);
+    }
+  }, [banners.length, currentBanner]);
+
+  useEffect(() => {
+    if (banners.length <= 1) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, BANNER_INTERVAL_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [banners.length, currentBanner]);
+
+  const activeBanner = banners[currentBanner] || banners[0];
+
+  const handleBannerDotClick = (index) => {
+    setCurrentBanner(index);
+  };
+
+  const handleRecommendationClick = (book) => {
+    if (book && onMoveToDetail) {
+      onMoveToDetail(book);
+    }
+  };
+
   return (
     <>
       <header className="header">
@@ -66,20 +106,11 @@ function Header({
           )}
         </div>
       </header>
-      {(page === "start" || page === "list") && (
-        <section
-          className="hero-slider-container"
-          style={{ position: "relative", marginBottom: "32px" }}
-        >
-          {currentBanner === 0 && (
-            <div
-              className="list-hero fade-in"
-              aria-label="AivleBooks 소개"
-              style={{
-                height: "160px",
-                display: "flex",
-              }}
-            >
+
+      {(page === "start" || page === "list") && activeBanner && (
+        <section className="hero-slider-container">
+          {activeBanner.type === "intro" && (
+            <div className="list-hero fade-in hero-banner" aria-label="AivleBooks 소개">
               <div>
                 <strong>AivleBooks</strong>
                 <p>글과 AI 표지 시안을 함께 관리하는 창작 서재</p>
@@ -87,86 +118,56 @@ function Header({
             </div>
           )}
 
-          {currentBanner === 1 && aiRecommendation && (
-            <div
-              className="list-hero fade-in"
-              style={{
-                backgroundColor: "#eef2ff",
-                color: "violet",
-                cursor: "pointer",
-                height: "160px",
-              }}
-              aria-label="이 달의 GPT 추천 도서"
+          {activeBanner.type === "recommendation" && activeBanner.book && (
+            <button
+              type="button"
+              className="list-hero fade-in hero-banner recommendation-banner"
+              onClick={() => handleRecommendationClick(activeBanner.book)}
+              aria-label={`${activeBanner.book.title} 상세 조회로 이동`}
             >
               <div>
-                <strong>✨ {currentMonth}월의 AI 추천 도서</strong>
-                <p style={{ marginTop: "8px", fontWeight: "bold" }}>
-                  [{aiRecommendation.title}] - {aiRecommendation.author.nickname}
+                <strong className="recommendation-title-mark">
+                  ✦ {currentMonth}월의 AI 추천 도서
+                </strong>
+                <p className="recommendation-book-title">
+                  [{activeBanner.book.title}] - {activeBanner.book.author.nickname}
                 </p>
-                <p
-                  style={{ marginTop: "4px", fontSize: "0.9rem", opacity: 0.8 }}
-                >
-                  🤖 "{aiRecommendation.reason}"
-                </p>
+                <p className="recommendation-reason">{activeBanner.book.reason}</p>
               </div>
-            </div>
+            </button>
           )}
-          {currentBanner === 1 && !aiRecommendation && (
+
+          {activeBanner.type === "recommendation" && !activeBanner.book && (
             <div
-              className="list-hero fade-in"
-              style={{
-                backgroundColor: "#f3f4f6",
-                color: "#6b7280",
-                height: "160px",
-                display: "flex",
-              }}
+              className="list-hero fade-in hero-banner recommendation-banner recommendation-banner-loading"
+              aria-label="AI 추천 도서 준비 중"
             >
               <div>
-                <strong>✨ {currentMonth}월의 AI 추천 도서</strong>
-                <p style={{ marginTop: "12px", fontSize: "0.95rem" }}>
-                  🤖 AI 큐레이션을 준비 중이거나 불러오지 못했습니다.
-                  <br />
-                  잠시 후 다시 확인해 주세요.
+                <strong className="recommendation-title-mark">
+                  ✦ {currentMonth}월의 AI 추천 도서
+                </strong>
+                <p className="recommendation-book-title">추천 도서를 고르는 중입니다</p>
+                <p className="recommendation-reason">
+                  등록된 도서의 분위기와 계절감을 살펴보고 있어요.
                 </p>
               </div>
             </div>
           )}
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "8px",
-              position: "absolute",
-              bottom: "16px",
-              width: "100%",
-            }}
-          >
-            <button
-              onClick={() => setCurrentBanner(0)}
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor:
-                  currentBanner === 0 ? "#fff" : "rgba(255,255,255,0.5)",
-                cursor: "pointer",
-              }}
-            />
-            <button
-              onClick={() => setCurrentBanner(1)}
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor:
-                  currentBanner === 1 ? "#3b82f6" : "rgba(59,130,246,0.3)",
-                cursor: "pointer",
-              }}
-            />
-          </div>
+          {banners.length > 1 && (
+            <div className="hero-banner-dots" aria-label="배너 선택">
+              {banners.map((banner, index) => (
+                <button
+                  key={`${banner.type}-${index}`}
+                  type="button"
+                  className={`hero-banner-dot ${currentBanner === index ? "is-active" : ""}`}
+                  onClick={() => handleBannerDotClick(index)}
+                  aria-label={banner.label}
+                  aria-current={currentBanner === index}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </>
